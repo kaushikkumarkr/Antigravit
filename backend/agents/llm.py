@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def get_llm(temperature: float = 0):
     """
     Returns the configured LLM client.
-    Prioritizes the provider set in .env (default: lmstudio).
+    Supports: ollama, lmstudio, google
     """
     provider = settings.LLM_PROVIDER.lower()
     logger.info(f"LLM Config - Provider: {provider}, Base URL: {settings.LLM_BASE_URL}, Model: {settings.LLM_MODEL_NAME}")
@@ -27,10 +27,11 @@ def get_llm(temperature: float = 0):
                     convert_system_message_to_human=True
                 )
         
-        # Default to OpenAI compatible (LM Studio, etc.)
+        # Default to OpenAI compatible (Ollama, LM Studio, etc.)
+        # Ollama uses http://localhost:11434/v1 as base URL
         return ChatOpenAI(
             base_url=settings.LLM_BASE_URL,
-            api_key="lm-studio", # Dummy key for local server
+            api_key="ollama" if provider == "ollama" else "lm-studio",  # Dummy key for local servers
             model=settings.LLM_MODEL_NAME,
             temperature=temperature
         )
