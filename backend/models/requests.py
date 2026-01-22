@@ -15,3 +15,13 @@ class SchemaRequest(BaseModel):
     Request model for schema info (mostly for future use if we need to filter).
     """
     table_names: Optional[list[str]] = None
+
+class ConnectionRequest(BaseModel):
+    """
+    Request model for managing MCP connections.
+    """
+    id: str = Field(..., description="Unique identifier for the connection.")
+    type: str = Field(..., description="Type of connection: 'postgres', 'sqlite', 'filesystem'.")
+    name: str = Field(..., description="Human-readable name.")
+    params: Dict[str, Any] = Field(..., description="Connection parameters (host, port, etc).")
+

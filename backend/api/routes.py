@@ -27,7 +27,9 @@ async def get_schema():
         schema_text = results[0].text
         # Simple parsing for table names (could be better)
         lines = schema_text.split('\n')
-        tables = [line.replace('Table: ', '').strip() for line in lines if line.startswith('Table: ')]
+        # Use set to remove duplicates if multiple connections have same table names
+        tables = list(set(line.replace('Table: ', '').strip() for line in lines if line.startswith('Table: ')))
+        tables.sort() # Sort for consistent display
         
         return SchemaResponse(schema_text=schema_text, tables=tables)
     except Exception as e:
@@ -83,3 +85,33 @@ async def query_agent(request: QueryRequest):
 def pd_steps(state):
     # Dummy step counter
     return 0
+
+# --- Connection Management Endpoints ---
+
+from backend.models.requests import ConnectionRequest
+from backend.mcp.manager import manager
+
+@router.get("/connections", response_model=list[ConnectionRequest])
+async def list_connections():
+    """List all configured connections."""
+    return manager.list_connections()
+
+@router.post("/connections", response_model=ConnectionRequest)
+async def add_connection(request: ConnectionRequest):
+    """Add a new connection."""
+    try:
+        manager.add_connection(request.dict())
+        return request
+    except Exception as e:
+        logger.error(f"Failed to add connection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/connections/{connection_id}")
+async def remove_connection(connection_id: str):
+    """Remove a connection."""
+    try:
+        manager.remove_connection(connection_id)
+        return {"status": "success", "id": connection_id}
+    except Exception as e:
+        logger.error(f"Failed to remove connection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
