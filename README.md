@@ -150,7 +150,35 @@ sequenceDiagram
 4. **Streaming Updates**: WebSocket provides real-time agent status updates.
 5. **Inline Visualizations**: Charts render directly in chat messages.
 
+## 🔭 Observability (Arize Phoenix)
 
+Antigravirt includes built-in LLM observability using [Arize Phoenix](https://github.com/Arize-ai/phoenix).
+
+### Features
+- **Trace Tree Visualization**: See the full execution flow for each query
+- **Token Usage Tracking**: Monitor input/output tokens per LLM call
+- **Latency Analysis**: Identify slow nodes in your agent pipeline
+- **LLM I/O Inspection**: View exact prompts and responses
+
+### Setup
+```bash
+# Start Phoenix container
+docker-compose up phoenix -d
+
+# Access Phoenix UI
+open http://localhost:6006
+```
+
+### Trace Structure
+Each query generates a trace tree showing:
+```
+Query: "How many customers?"
+└── Router (LLM) → DATA_QUERY
+    └── Architect (LLM) → Query Plan
+        └── Coder (LLM) → SQL Query
+            └── Executor (DB) → Result
+                └── Final Responder (LLM) → Answer
+```
 
 ## ⚡ Quick Start
 

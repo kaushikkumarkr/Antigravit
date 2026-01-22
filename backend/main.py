@@ -3,6 +3,11 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+# Initialize Phoenix observability BEFORE importing LangChain components
+from backend.observability.phoenix import init_phoenix
+init_phoenix()
+
 from backend.api.routes import router as api_router
 from backend.api.websocket import router as ws_router
 

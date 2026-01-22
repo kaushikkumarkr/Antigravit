@@ -65,5 +65,19 @@ services:
     depends_on:
       - backend
 
+  # Arize Phoenix - LLM Observability
+  phoenix:
+    container_name: antigravirt_phoenix
+    image: arizephoenix/phoenix:latest
+    restart: unless-stopped
+    ports:
+      - "6006:6006" # Phoenix UI
+      - "4317:4317" # OTLP gRPC collector
+    environment:
+      - PHOENIX_WORKING_DIR=/phoenix
+    volumes:
+      - phoenix_data:/phoenix
+
 volumes:
   postgres_data:
+  phoenix_data:
