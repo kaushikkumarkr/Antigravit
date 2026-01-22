@@ -1,0 +1,91 @@
+{
+  "summary": {
+    "experiment_name": "traced_v1",
+    "timestamp": "2026-01-22T15:33:12.232988",
+    "total_cases": 2,
+    "intent_accuracy": 1.0,
+    "sql_quality": 0.75,
+    "faithfulness": 1.0
+  },
+  "results": [
+    {
+      "id": "eval_001",
+      "input": "How many customers are there?",
+      "category": "DATA_QUERY",
+      "expected_intent": "DATA_QUERY",
+      "reference_sql": "SELECT COUNT(*) FROM customers",
+      "expected_answer_contains": [
+        "500",
+        "customers"
+      ],
+      "actual_intent": "DATA_QUERY",
+      "generated_sql": "SELECT COUNT(*) AS customer_count FROM customers;",
+      "query_result": [
+        {
+          "result": "customer_count\n--------------\n500           "
+        }
+      ],
+      "final_response": "There are 500 customers in total.",
+      "error": null
+    },
+    {
+      "id": "eval_002",
+      "input": "What is the total revenue from all orders?",
+      "category": "DATA_QUERY",
+      "expected_intent": "DATA_QUERY",
+      "reference_sql": "SELECT SUM(total_amount) FROM orders",
+      "expected_answer_contains": [
+        "13154865",
+        "revenue",
+        "total"
+      ],
+      "actual_intent": "DATA_QUERY",
+      "generated_sql": "SELECT SUM(order_items.quantity * order_items.unit_price) AS total_revenue\nFROM orders\nJOIN order_items ON orders.id = order_items.order_id;",
+      "query_result": [
+        {
+          "result": "total_revenue\n-------------\n13154865.6   "
+        }
+      ],
+      "final_response": "The total revenue from all orders is $13,154,865.60.",
+      "error": null
+    }
+  ],
+  "evaluations": {
+    "intent_accuracy": [
+      {
+        "score": 1.0,
+        "label": "CORRECT",
+        "explanation": "Intent matched"
+      },
+      {
+        "score": 1.0,
+        "label": "CORRECT",
+        "explanation": "Intent matched"
+      }
+    ],
+    "sql_quality": [
+      {
+        "score": 1.0,
+        "label": "EQUIVALENT",
+        "explanation": "EQUIVALENT"
+      },
+      {
+        "score": 0.5,
+        "label": "PARTIAL",
+        "explanation": "PARTIAL"
+      }
+    ],
+    "faithfulness": [
+      {
+        "score": 1.0,
+        "label": "FAITHFUL",
+        "explanation": "FAITHFUL"
+      },
+      {
+        "score": 1.0,
+        "label": "FAITHFUL",
+        "explanation": "FAITHFUL"
+      }
+    ]
+  }
+}

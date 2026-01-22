@@ -1,0 +1,24 @@
+{
+  "test-sqlite": {
+    "id": "test-sqlite",
+    "type": "sqlite",
+    "name": "Test Local DB",
+    "params": {
+      "path": "./test.db"
+    }
+  },
+  "product-sample": {
+    "id": "product-sample",
+    "type": "sqlite",
+    "name": "Product Sample",
+    "params": {
+      "path": "/Users/krkaushikkumar/Desktop/1/antigravirt/sample_data.db"
+    }
+  },
+  "default": {
+    "id": "default",
+    "type": "postgres",
+    "name": "Default Database",
+    "params": {}
+  }
+}

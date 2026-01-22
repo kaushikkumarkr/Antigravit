@@ -1,0 +1,21 @@
+id,input,category,expected_intent,actual_intent,intent_correct,reference_sql,generated_sql,sql_executed,final_response,answer_contains_expected,latency_ms,error,timestamp
+eval_001,How many customers are there?,DATA_QUERY,DATA_QUERY,DATA_QUERY,True,SELECT COUNT(*) FROM customers,"SELECT COUNT(*) AS customer_count
+FROM customers;",True,"I apologize, but I was unable to process your request after multiple attempts.
+
+**Original Question:** How many customers are there?
+**Error Encountered:** Critic failed to generate valid SQL: Multiple statements are not allowed.
+
+Please try rephrasing your question or checking if the data you are looking for exists in the database.
+",True,197944.48,,2026-01-22T15:06:22.312217
+eval_002,What is the total revenue from all orders?,DATA_QUERY,DATA_QUERY,DATA_QUERY,True,SELECT SUM(total_amount) FROM orders,"SELECT SUM(order_items.quantity * order_items.unit_price) AS total_revenue
+FROM orders
+JOIN order_items ON orders.id = order_items.order_id;",True,"The total revenue from all orders is $13,154,865.60.",True,77200.31,,2026-01-22T15:07:39.512661
+eval_003,Show me the top 5 most expensive products,DATA_QUERY,DATA_QUERY,DATA_QUERY,True,"SELECT name, price FROM products ORDER BY price DESC LIMIT 5","SELECT id, name, price
+FROM products
+ORDER BY price DESC
+LIMIT 5;",True,"Here are the top 5 most expensive products:
+1. Synergized maximized matrices priced at $989.65
+2. Expanded uniform customer loyalty valued at $938.08
+3. Cloned demand-driven standardization costing $890.93
+4. Adaptive system-worthy secured line with a price of $879.90
+5. Reactive tangible array priced at $843.95",True,115090.73,,2026-01-22T15:09:34.603660

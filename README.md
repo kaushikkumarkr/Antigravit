@@ -64,6 +64,14 @@ Full visibility into your AI pipeline with trace analysis:
   <img src="img/arize/SingleTrace.png" alt="Arize Phoenix - Single Trace" width="700"/>
 </p>
 
+### Evaluation Metrics in Phoenix
+
+Custom evaluation metrics (Intent Accuracy, SQL Quality, Faithfulness) are logged directly to Phoenix as span annotations:
+
+<p align="center">
+  <img src="img/arize/EvaluationMetrics.png" alt="Arize Phoenix - Evaluation Metrics" width="700"/>
+</p>
+
 ---
 
 ## 🛠️ Tech Stack
@@ -442,6 +450,47 @@ flowchart TB
 > **Note:** Latencies shown are for local LLM (qwen2.5:7b). Cloud LLMs (GPT-4, Claude) reduce inference time to 1-3s per call.
 
 ---
+
+## 🧪 Evaluation & Benchmarking
+
+Antigravirt includes a **production-grade evaluation framework** for systematically measuring AI system performance.
+
+### Evaluation Metrics
+
+| Metric | Description | Method |
+|--------|-------------|--------|
+| **Intent Accuracy** | Correct routing classification | Exact match vs. expected intent |
+| **SQL Quality** | Semantic equivalence of generated SQL | LLM-as-a-judge comparison |
+| **Faithfulness** | Response grounded in data (no hallucinations) | LLM-as-a-judge verification |
+
+### Running Evaluations
+
+```bash
+# Run evaluation with Phoenix integration
+python scripts/phoenix_experiment.py --experiment-name "baseline_v1" --limit 5
+
+# Full evaluation (15 test cases)
+python scripts/phoenix_experiment.py --experiment-name "full_eval"
+```
+
+### Evaluation Results in Phoenix
+
+All evaluation metrics are logged directly to Arize Phoenix as **span annotations**:
+
+- **Project Header**: Shows aggregate metrics (μ intent_accuracy, μ sql_quality)
+- **Traces Table**: Annotations column with per-trace scores
+- **Trace Details**: Full breakdown with label, score, and explanation
+
+### Sample Baseline Results
+
+| Metric | Score |
+|--------|-------|
+| Intent Accuracy | **100%** |
+| SQL Quality | **83%** |
+| Faithfulness | **100%** |
+
+> These results demonstrate robust routing and response grounding, with SQL generation showing room for optimization on complex join queries.
+
 
 ## 📦 Project Structure
 

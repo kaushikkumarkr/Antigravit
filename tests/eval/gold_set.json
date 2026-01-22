@@ -1,0 +1,191 @@
+[
+    {
+        "id": "eval_001",
+        "category": "DATA_QUERY",
+        "input": "How many customers are there?",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT COUNT(*) FROM customers",
+        "expected_answer_contains": [
+            "500",
+            "customers"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_002",
+        "category": "DATA_QUERY",
+        "input": "What is the total revenue from all orders?",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT SUM(total_amount) FROM orders",
+        "expected_answer_contains": [
+            "13154865",
+            "revenue",
+            "total"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_003",
+        "category": "DATA_QUERY",
+        "input": "Show me the top 5 most expensive products",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT name, price FROM products ORDER BY price DESC LIMIT 5",
+        "expected_answer_contains": [
+            "product",
+            "price"
+        ],
+        "difficulty": "medium"
+    },
+    {
+        "id": "eval_004",
+        "category": "DATA_QUERY",
+        "input": "How many orders are in pending status?",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT COUNT(*) FROM orders WHERE status = 'pending'",
+        "expected_answer_contains": [
+            "pending",
+            "orders"
+        ],
+        "difficulty": "medium"
+    },
+    {
+        "id": "eval_005",
+        "category": "DATA_QUERY",
+        "input": "What is the average order value?",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT AVG(total_amount) FROM orders",
+        "expected_answer_contains": [
+            "average",
+            "order"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_006",
+        "category": "DATA_QUERY",
+        "input": "Show me total sales by order status",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT status, SUM(total_amount) FROM orders GROUP BY status",
+        "expected_answer_contains": [
+            "completed",
+            "pending",
+            "status"
+        ],
+        "difficulty": "medium"
+    },
+    {
+        "id": "eval_007",
+        "category": "DATA_QUERY",
+        "input": "How many orders were placed by each customer? Show top 10",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT customer_id, COUNT(*) as order_count FROM orders GROUP BY customer_id ORDER BY order_count DESC LIMIT 10",
+        "expected_answer_contains": [
+            "customer",
+            "orders"
+        ],
+        "difficulty": "hard"
+    },
+    {
+        "id": "eval_008",
+        "category": "DATA_QUERY",
+        "input": "What is the most ordered product?",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT product_id, SUM(quantity) as total_qty FROM order_items GROUP BY product_id ORDER BY total_qty DESC LIMIT 1",
+        "expected_answer_contains": [
+            "product",
+            "ordered"
+        ],
+        "difficulty": "hard"
+    },
+    {
+        "id": "eval_009",
+        "category": "SCHEMA_QUESTION",
+        "input": "What tables are in the database?",
+        "expected_intent": "SCHEMA_QUESTION",
+        "reference_sql": null,
+        "expected_answer_contains": [
+            "customers",
+            "orders",
+            "products",
+            "order_items"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_010",
+        "category": "SCHEMA_QUESTION",
+        "input": "Describe the orders table",
+        "expected_intent": "SCHEMA_QUESTION",
+        "reference_sql": null,
+        "expected_answer_contains": [
+            "id",
+            "customer_id",
+            "status",
+            "total_amount"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_011",
+        "category": "GENERAL_CHAT",
+        "input": "Hello, who are you?",
+        "expected_intent": "GENERAL_CHAT",
+        "reference_sql": null,
+        "expected_answer_contains": [
+            "Antigravirt",
+            "data",
+            "analyst"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_012",
+        "category": "GENERAL_CHAT",
+        "input": "What can you help me with?",
+        "expected_intent": "GENERAL_CHAT",
+        "reference_sql": null,
+        "expected_answer_contains": [
+            "query",
+            "database",
+            "visualize"
+        ],
+        "difficulty": "easy"
+    },
+    {
+        "id": "eval_013",
+        "category": "DATA_QUERY",
+        "input": "Show me the number of page views per page",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT page_url, COUNT(*) as views FROM page_views GROUP BY page_url",
+        "expected_answer_contains": [
+            "page",
+            "views"
+        ],
+        "difficulty": "medium"
+    },
+    {
+        "id": "eval_014",
+        "category": "DATA_QUERY",
+        "input": "Which customers have spent the most? Top 5",
+        "expected_intent": "DATA_QUERY",
+        "reference_sql": "SELECT customer_id, SUM(total_amount) as total_spent FROM orders GROUP BY customer_id ORDER BY total_spent DESC LIMIT 5",
+        "expected_answer_contains": [
+            "customer",
+            "spent"
+        ],
+        "difficulty": "hard"
+    },
+    {
+        "id": "eval_015",
+        "category": "AMBIGUOUS",
+        "input": "Show me the data",
+        "expected_intent": "AMBIGUOUS",
+        "reference_sql": null,
+        "expected_answer_contains": [
+            "clarify",
+            "specific",
+            "which"
+        ],
+        "difficulty": "edge_case"
+    }
+]

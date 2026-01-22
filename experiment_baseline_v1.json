@@ -1,0 +1,126 @@
+{
+  "summary": {
+    "experiment_name": "baseline_v1",
+    "timestamp": "2026-01-22T15:26:44.653454",
+    "total_cases": 3,
+    "intent_accuracy": 1.0,
+    "sql_quality": 0.8333333333333334,
+    "faithfulness": 1.0
+  },
+  "results": [
+    {
+      "id": "eval_001",
+      "input": "How many customers are there?",
+      "category": "DATA_QUERY",
+      "expected_intent": "DATA_QUERY",
+      "reference_sql": "SELECT COUNT(*) FROM customers",
+      "expected_answer_contains": [
+        "500",
+        "customers"
+      ],
+      "actual_intent": "DATA_QUERY",
+      "generated_sql": "SELECT COUNT(*) AS customer_count FROM customers;",
+      "query_result": [
+        {
+          "result": "customer_count\n--------------\n500           "
+        }
+      ],
+      "final_response": "There are 500 customers in total.",
+      "error": null
+    },
+    {
+      "id": "eval_002",
+      "input": "What is the total revenue from all orders?",
+      "category": "DATA_QUERY",
+      "expected_intent": "DATA_QUERY",
+      "reference_sql": "SELECT SUM(total_amount) FROM orders",
+      "expected_answer_contains": [
+        "13154865",
+        "revenue",
+        "total"
+      ],
+      "actual_intent": "DATA_QUERY",
+      "generated_sql": "SELECT SUM(order_items.quantity * order_items.unit_price) AS total_revenue\nFROM orders\nJOIN order_items ON orders.id = order_items.order_id;",
+      "query_result": [
+        {
+          "result": "total_revenue\n-------------\n13154865.6   "
+        }
+      ],
+      "final_response": "The total revenue from all orders is $13,154,865.60.",
+      "error": null
+    },
+    {
+      "id": "eval_003",
+      "input": "Show me the top 5 most expensive products",
+      "category": "DATA_QUERY",
+      "expected_intent": "DATA_QUERY",
+      "reference_sql": "SELECT name, price FROM products ORDER BY price DESC LIMIT 5",
+      "expected_answer_contains": [
+        "product",
+        "price"
+      ],
+      "actual_intent": "DATA_QUERY",
+      "generated_sql": "SELECT id, name, price\nFROM products\nORDER BY price DESC\nLIMIT 5;",
+      "query_result": [
+        {
+          "result": "id | name                                 | price \n---|--------------------------------------|-------\n29 | Synergized maximized matrices        | 989.65\n34 | Expanded uniform customer loyalty    | 938.08\n26 | Cloned demand-driven standardization | 890.93\n8  | Adaptive system-worthy secured line  | 879.9 \n19 | Reactive tangible array              | 843.95"
+        }
+      ],
+      "final_response": "Here are the top 5 most expensive products:\n\n1. Synergized maximized matrices - $989.65\n2. Expanded uniform customer loyalty - $938.08\n3. Cloned demand-driven standardization - $890.93\n4. Adaptive system-worthy secured line - $879.90\n5. Reactive tangible array - $843.95",
+      "error": null
+    }
+  ],
+  "evaluations": {
+    "intent_accuracy": [
+      {
+        "score": 1.0,
+        "label": "CORRECT",
+        "explanation": "Intent matched"
+      },
+      {
+        "score": 1.0,
+        "label": "CORRECT",
+        "explanation": "Intent matched"
+      },
+      {
+        "score": 1.0,
+        "label": "CORRECT",
+        "explanation": "Intent matched"
+      }
+    ],
+    "sql_quality": [
+      {
+        "score": 1.0,
+        "label": "EQUIVALENT",
+        "explanation": "EQUIVALENT"
+      },
+      {
+        "score": 0.5,
+        "label": "PARTIAL",
+        "explanation": "PARTIAL"
+      },
+      {
+        "score": 1.0,
+        "label": "EQUIVALENT",
+        "explanation": "EQUIVALENT"
+      }
+    ],
+    "faithfulness": [
+      {
+        "score": 1.0,
+        "label": "FAITHFUL",
+        "explanation": "FAITHFUL"
+      },
+      {
+        "score": 1.0,
+        "label": "FAITHFUL",
+        "explanation": "FAITHFUL"
+      },
+      {
+        "score": 1.0,
+        "label": "FAITHFUL",
+        "explanation": "FAITHFUL"
+      }
+    ]
+  }
+}
