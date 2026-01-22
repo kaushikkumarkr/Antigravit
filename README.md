@@ -82,258 +82,364 @@ Full visibility into your AI pipeline with trace analysis:
 
 ## 🏗️ System Architecture
 
-### Architecture Overview
-
-Antigravirt follows a **layered architecture** with clear separation of concerns:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PRESENTATION LAYER                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │                         React Frontend                                   │ │
-│  │   ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────────┐  │ │
-│  │   │ Chat Panel   │  │   Sidebar    │  │   Connection Manager         │  │ │
-│  │   │  - Messages  │  │  - Schema    │  │   - Add/Remove Sources       │  │ │
-│  │   │  - Charts    │  │  - Status    │  │   - PostgreSQL/SQLite/FS     │  │ │
-│  │   └──────────────┘  └──────────────┘  └──────────────────────────────┘  │ │
-│  └─────────────────────────────────────────────────────────────────────────┘ │
-│                                    │ WebSocket + REST API                    │
-└────────────────────────────────────┼────────────────────────────────────────┘
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           APPLICATION LAYER                                  │
-│  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │                         FastAPI Backend                                  │ │
-│  │   ┌─────────────────────────────────────────────────────────────────┐   │ │
-│  │   │                  LangGraph Agent Pipeline                        │   │ │
-│  │   │                                                                  │   │ │
-│  │   │   ┌─────────┐     ┌───────────┐     ┌────────┐     ┌─────────┐  │   │ │
-│  │   │   │ Router  │────▶│ Architect │────▶│ Coder  │────▶│Executor │  │   │ │
-│  │   │   └────┬────┘     └───────────┘     └────────┘     └────┬────┘  │   │ │
-│  │   │        │                                                 │       │   │ │
-│  │   │   ┌────▼────┐                                      ┌────▼────┐  │   │ │
-│  │   │   │  Chat   │                                      │Viz Route│  │   │ │
-│  │   │   │Responder│                                      └────┬────┘  │   │ │
-│  │   │   └─────────┘                                           │       │   │ │
-│  │   │                                                    ┌────▼────┐  │   │ │
-│  │   │                                                    │Visualizr│  │   │ │
-│  │   │                                                    └────┬────┘  │   │ │
-│  │   │                                                         ▼       │   │ │
-│  │   │                                                  ┌───────────┐  │   │ │
-│  │   │                                                  │  Final    │  │   │ │
-│  │   │                                                  │ Responder │  │   │ │
-│  │   │                                                  └───────────┘  │   │ │
-│  │   └─────────────────────────────────────────────────────────────────┘   │ │
-│  └─────────────────────────────────────────────────────────────────────────┘ │
-│                                    │                                         │
-└────────────────────────────────────┼────────────────────────────────────────┘
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         DATA CONNECTIVITY LAYER (MCP)                        │
-│  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │                       MCP Connection Manager                             │ │
-│  │   ┌────────────────┐  ┌────────────────┐  ┌────────────────────────┐    │ │
-│  │   │ PostgreSQL     │  │    SQLite      │  │     Filesystem         │    │ │
-│  │   │    Server      │  │    Server      │  │       Server           │    │ │
-│  │   │                │  │                │  │                        │    │ │
-│  │   │ • query()      │  │ • query()      │  │ • read_file()          │    │ │
-│  │   │ • get_schema() │  │ • get_schema() │  │ • list_directory()     │    │ │
-│  │   │ • list_tables()│  │ • list_tables()│  │ • write_file()         │    │ │
-│  │   └───────┬────────┘  └───────┬────────┘  └───────────┬────────────┘    │ │
-│  └───────────┼───────────────────┼───────────────────────┼─────────────────┘ │
-└──────────────┼───────────────────┼───────────────────────┼──────────────────┘
-               ▼                   ▼                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             DATA LAYER                                       │
-│                                                                              │
-│   ┌────────────────┐     ┌────────────────┐     ┌────────────────────────┐  │
-│   │   PostgreSQL   │     │    SQLite      │     │   Local Filesystem     │  │
-│   │   Database(s)  │     │   Database(s)  │     │   (Sandboxed)          │  │
-│   └────────────────┘     └────────────────┘     └────────────────────────┘  │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          INTELLIGENCE LAYER                                  │
-│                                                                              │
-│   ┌───────────────────────────────────────┐   ┌───────────────────────────┐ │
-│   │          Local LLM (Ollama)           │   │    Arize Phoenix          │ │
-│   │                                       │   │    (Observability)        │ │
-│   │   • qwen2.5:7b / qwen2.5:14b         │   │                           │ │
-│   │   • 100% Local Processing            │   │   • Trace Visualization   │ │
-│   │   • No Data Leaves Infrastructure    │   │   • Token Usage Tracking  │ │
-│   │                                       │   │   • Latency Analysis      │ │
-│   └───────────────────────────────────────┘   └───────────────────────────┘ │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Agent Pipeline (LangGraph)
+### Complete System Overview
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#6366f1', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4f46e5', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a'}}}%%
+flowchart TB
+    subgraph CLIENT["🖥️ CLIENT LAYER"]
+        direction TB
+        UI["React Frontend<br/>━━━━━━━━━━━━━━<br/>• Chat Interface<br/>• Visualization Panel<br/>• Connection Manager"]
+    end
+
+    subgraph GATEWAY["🔌 API GATEWAY"]
+        direction TB
+        REST["REST API<br/>/api/*"]
+        WSS["WebSocket Server<br/>/ws/chat"]
+    end
+
+    subgraph AGENTS["🤖 LANGGRAPH AGENT ORCHESTRATION"]
+        direction TB
+        
+        subgraph ROUTING["Intent Router"]
+            R{{"🧭 Router<br/>Intent Classification"}}
+        end
+        
+        subgraph QUERY_PIPELINE["Data Query Pipeline"]
+            direction LR
+            ARCH["📐 Architect<br/>Schema Analysis"]
+            CODE["✍️ Coder<br/>SQL Generation"]
+            EXEC["⚡ Executor<br/>Query Execution"]
+        end
+        
+        subgraph VIZ_PIPELINE["Visualization Pipeline"]
+            direction LR
+            VIZR{{"📊 Viz Router"}}
+            VIZ["🎨 Visualizer<br/>Plotly Generation"]
+        end
+        
+        subgraph ALT_PATHS["Alternative Paths"]
+            CHAT["💬 Chat"]
+            SCHEMA["📋 Schema"]
+            CLARIFY["❓ Clarify"]
+        end
+        
+        FINAL["✅ Final Responder<br/>Response Synthesis"]
+    end
+
+    subgraph MCP_LAYER["🔗 MODEL CONTEXT PROTOCOL (MCP)"]
+        direction TB
+        MGR["MCP Connection Manager<br/>━━━━━━━━━━━━━━━━━<br/>• Schema Caching (60s TTL)<br/>• Connection Pooling<br/>• Dynamic Server Spawning"]
+        
+        subgraph MCP_SERVERS["MCP Server Fleet"]
+            direction LR
+            PG["🐘 PostgreSQL<br/>Server<br/>━━━━━━━<br/>• query()<br/>• get_schema()<br/>• list_tables()"]
+            SQLITE["📦 SQLite<br/>Server<br/>━━━━━━━<br/>• query()<br/>• get_schema()<br/>• list_tables()"]
+            FS["📁 Filesystem<br/>Server<br/>━━━━━━━<br/>• read_file()<br/>• list_dir()<br/>• write_file()"]
+        end
+    end
+
+    subgraph DATA["🗄️ DATA SOURCES"]
+        direction LR
+        DB1[("PostgreSQL<br/>Production DB")]
+        DB2[("SQLite<br/>Analytics DB")]
+        FILES[("Local Files<br/>CSV/JSON")]
+    end
+
+    subgraph INTELLIGENCE["🧠 INTELLIGENCE LAYER"]
+        direction LR
+        LLM["🤖 Local LLM<br/>━━━━━━━━━━<br/>Ollama / LM Studio<br/>qwen2.5:7b/14b"]
+        PHOENIX["📊 Arize Phoenix<br/>━━━━━━━━━━━━<br/>LLM Observability<br/>Trace Analysis"]
+    end
+
+    %% Client to Gateway
+    UI <-->|"WebSocket<br/>Real-time"| WSS
+    UI -->|"HTTP<br/>REST"| REST
+
+    %% Gateway to Agents
+    WSS --> R
+    REST --> MGR
+
+    %% Router branching
+    R -->|"DATA_QUERY"| ARCH
+    R -->|"GENERAL_CHAT"| CHAT
+    R -->|"SCHEMA_QUESTION"| SCHEMA
+    R -->|"AMBIGUOUS"| CLARIFY
+
+    %% Query Pipeline
+    ARCH --> CODE --> EXEC
+    EXEC --> VIZR
+    VIZR -->|"Needs Chart"| VIZ
+    VIZR -->|"Text Only"| FINAL
+    VIZ --> FINAL
+
+    %% Alt paths to output
+    CHAT --> FINAL
+    SCHEMA --> FINAL
+    CLARIFY --> FINAL
+
+    %% Executor to MCP
+    EXEC --> MGR
+    MGR --> PG & SQLITE & FS
+
+    %% MCP to Data
+    PG --> DB1
+    SQLITE --> DB2
+    FS --> FILES
+
+    %% LLM connections
+    R -.->|"Inference"| LLM
+    ARCH -.->|"Inference"| LLM
+    CODE -.->|"Inference"| LLM
+    VIZ -.->|"Inference"| LLM
+    FINAL -.->|"Inference"| LLM
+
+    %% Observability
+    R -.->|"Trace"| PHOENIX
+    ARCH -.->|"Trace"| PHOENIX
+    CODE -.->|"Trace"| PHOENIX
+    EXEC -.->|"Trace"| PHOENIX
+    VIZ -.->|"Trace"| PHOENIX
+
+    %% Styling
+    classDef client fill:#3b82f6,stroke:#2563eb,color:#fff
+    classDef gateway fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    classDef agent fill:#10b981,stroke:#059669,color:#fff
+    classDef mcp fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef data fill:#6366f1,stroke:#4f46e5,color:#fff
+    classDef intel fill:#ec4899,stroke:#db2777,color:#fff
+
+    class UI client
+    class REST,WSS gateway
+    class R,ARCH,CODE,EXEC,VIZR,VIZ,CHAT,SCHEMA,CLARIFY,FINAL agent
+    class MGR,PG,SQLITE,FS mcp
+    class DB1,DB2,FILES data
+    class LLM,PHOENIX intel
+```
+
+---
+
+### 🔗 MCP (Model Context Protocol) Deep Dive
+
+The MCP layer provides a **unified interface** for connecting to heterogeneous data sources:
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
 flowchart LR
-    subgraph INPUT
-        Q[/"User Question"/]
+    subgraph AGENT["Agent Layer"]
+        EXEC["Executor Node"]
     end
 
-    subgraph ROUTING["🧭 Intent Classification"]
-        R{Router}
+    subgraph MCP_MANAGER["MCP Connection Manager"]
+        direction TB
+        CACHE["Schema Cache<br/>TTL: 60s"]
+        REGISTRY["Connection Registry<br/>connections.json"]
+        SPAWNER["Server Spawner<br/>subprocess.Popen"]
     end
 
-    subgraph DATA_PATH["📊 Data Query Path"]
-        A[Architect<br/>Identify Tables]
-        C[Coder<br/>Generate SQL]
-        E[Executor<br/>Run Query]
-        VR{Viz Router}
-        V[Visualizer<br/>Create Chart]
+    subgraph SERVERS["MCP Server Instances"]
+        direction TB
+        
+        subgraph PG_SERVER["PostgreSQL MCP Server"]
+            PG_QUERY["query(sql) → JSON"]
+            PG_SCHEMA["get_schema() → DDL"]
+            PG_TABLES["list_tables() → [str]"]
+        end
+        
+        subgraph SQLITE_SERVER["SQLite MCP Server"]
+            SQ_QUERY["query(sql) → JSON"]
+            SQ_SCHEMA["get_schema() → DDL"]
+            SQ_TABLES["list_tables() → [str]"]
+        end
+        
+        subgraph FS_SERVER["Filesystem MCP Server"]
+            FS_READ["read_file(path) → str"]
+            FS_LIST["list_directory() → [str]"]
+            FS_WRITE["write_file(path, data)"]
+        end
     end
 
-    subgraph OTHER_PATHS["💬 Alternative Paths"]
-        CR[Chat Responder]
-        SR[Schema Responder]
-        CL[Clarifier]
+    subgraph TRANSPORT["stdio Transport"]
+        STDIN["stdin (JSON-RPC)"]
+        STDOUT["stdout (JSON-RPC)"]
     end
 
-    subgraph OUTPUT
-        FR[Final Responder]
-        O[/"Response + Chart"/]
-    end
+    EXEC -->|"get_tool_result()"| MCP_MANAGER
+    MCP_MANAGER -->|"spawn if needed"| SERVERS
+    SERVERS <-->|"JSON-RPC 2.0"| TRANSPORT
 
-    Q --> R
-    R -->|DATA_QUERY| A
-    R -->|GENERAL_CHAT| CR
-    R -->|SCHEMA_QUESTION| SR
-    R -->|AMBIGUOUS| CL
-
-    A --> C --> E --> VR
-    VR -->|Needs Chart| V
-    VR -->|Text Only| FR
-    V --> FR
-    
-    CR --> O
-    SR --> O
-    CL --> O
-    FR --> O
-
-    style R fill:#6366f1,stroke:#4f46e5,color:#fff
-    style A fill:#10b981,stroke:#059669,color:#fff
-    style C fill:#f59e0b,stroke:#d97706,color:#fff
-    style E fill:#ef4444,stroke:#dc2626,color:#fff
-    style V fill:#8b5cf6,stroke:#7c3aed,color:#fff
-    style FR fill:#3b82f6,stroke:#2563eb,color:#fff
+    style CACHE fill:#22c55e,stroke:#16a34a,color:#fff
+    style REGISTRY fill:#3b82f6,stroke:#2563eb,color:#fff
+    style SPAWNER fill:#f59e0b,stroke:#d97706,color:#fff
 ```
 
-### Component Responsibilities
+#### MCP Server Tools Reference
 
-| Component | Layer | Responsibility |
-|-----------|-------|----------------|
-| **Chat Panel** | Presentation | Display messages, charts, handle user input |
-| **Connection Manager** | Presentation | Configure data source connections |
-| **WebSocket Server** | Application | Real-time bidirectional communication |
-| **Router** | Application | Classify user intent with confidence scoring |
-| **Architect** | Application | Analyze schema, identify relevant tables |
-| **Coder** | Application | Generate safe, optimized SQL queries |
-| **Executor** | Application | Execute SQL via MCP, format results |
-| **Visualizer** | Application | Generate Plotly chart specifications |
-| **MCP Manager** | Data | Manage connections, cache schemas |
-| **PostgreSQL Server** | Data | Execute queries against PostgreSQL |
-| **SQLite Server** | Data | Execute queries against SQLite |
-| **Ollama/LM Studio** | Intelligence | Local LLM inference |
-| **Arize Phoenix** | Intelligence | LLM observability and tracing |
+| Server | Tool | Input | Output | Description |
+|--------|------|-------|--------|-------------|
+| **PostgreSQL** | `query` | `sql: str` | `JSON` | Execute read-only SQL (SELECT only) |
+| **PostgreSQL** | `get_schema` | `table_name?: str` | `DDL string` | Get table/column definitions |
+| **PostgreSQL** | `list_tables` | — | `List[str]` | List all public tables |
+| **SQLite** | `query` | `sql: str` | `JSON` | Execute read-only SQL |
+| **SQLite** | `get_schema` | `table_name?: str` | `DDL string` | Get schema from sqlite_master |
+| **SQLite** | `list_tables` | — | `List[str]` | List all tables |
+| **Filesystem** | `read_file` | `path: str` | `str` | Read file (max 10MB, sandboxed) |
+| **Filesystem** | `list_directory` | `path?: str` | `List[str]` | List directory contents |
+| **Filesystem** | `write_file` | `path, data` | `bool` | Write to file (sandboxed) |
 
-### Data Flow Sequence
+---
+
+### 🔭 Arize Phoenix Observability Architecture
+
+Full LLM observability with distributed tracing:
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant U as 👤 User
-    participant F as 🖥️ Frontend
-    participant WS as 🔌 WebSocket
-    participant R as 🧭 Router
-    participant A as 📐 Architect
-    participant C as ✍️ Coder
-    participant MCP as 🔗 MCP
-    participant DB as 🗄️ Database
-    participant LLM as 🤖 LLM
-    participant P as 📊 Phoenix
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph APP["Application"]
+        direction TB
+        OTEL["OpenTelemetry<br/>Instrumentor"]
+        AGENTS["LangGraph<br/>Agents"]
+    end
 
-    U->>F: "Show sales by status as a chart"
-    F->>WS: Send message
+    subgraph PHOENIX["Arize Phoenix (localhost:6006)"]
+        direction TB
+        COLLECTOR["OTLP Collector<br/>gRPC/HTTP"]
+        
+        subgraph STORAGE["Trace Storage"]
+            TRACES["Trace Store"]
+            SPANS["Span Store"]
+        end
+        
+        subgraph ANALYSIS["Analysis Engine"]
+            LATENCY["Latency<br/>Analysis"]
+            TOKENS["Token<br/>Counting"]
+            EVALS["LLM<br/>Evaluations"]
+        end
+        
+        subgraph UI["Phoenix UI"]
+            TREE["Trace Tree<br/>Visualization"]
+            METRICS["Performance<br/>Metrics"]
+            INSPECT["I/O<br/>Inspector"]
+        end
+    end
+
+    OTEL -->|"Auto-instrument"| AGENTS
+    AGENTS -->|"OTLP Export"| COLLECTOR
+    COLLECTOR --> TRACES & SPANS
+    TRACES --> LATENCY & TOKENS & EVALS
+    LATENCY --> TREE
+    TOKENS --> METRICS
+    EVALS --> INSPECT
+
+    style OTEL fill:#6366f1,stroke:#4f46e5,color:#fff
+    style COLLECTOR fill:#22c55e,stroke:#16a34a,color:#fff
+    style UI fill:#f59e0b,stroke:#d97706,color:#000
+```
+
+#### Trace Structure Example
+
+```
+📊 Query: "Show me sales by status as a bar chart"
+│
+├── 🧭 Router [12ms] ─────────────────────────────────────────────────
+│   ├── Input:  "Show me sales by status as a bar chart"
+│   ├── Output: {"intent": "DATA_QUERY", "confidence": 0.95}
+│   └── Tokens: 156 in / 42 out
+│
+├── 📐 Architect [8ms] ───────────────────────────────────────────────
+│   ├── Input:  Schema context + Question
+│   ├── Output: {"tables": ["orders"], "strategy": "aggregate"}
+│   └── Tokens: 892 in / 67 out
+│
+├── ✍️ Coder [15ms] ──────────────────────────────────────────────────
+│   ├── Input:  Query strategy + Schema
+│   ├── Output: "SELECT status, COUNT(*) FROM orders GROUP BY status"
+│   └── Tokens: 1024 in / 89 out
+│
+├── ⚡ Executor [3ms] ─────────────────────────────────────────────────
+│   ├── Input:  SQL Query
+│   ├── Output: [{"status": "completed", "count": 156}, ...]
+│   └── DB Latency: 2.1ms
+│
+├── 🎨 Visualizer [18ms] ─────────────────────────────────────────────
+│   ├── Input:  Query result + Chart request
+│   ├── Output: Plotly JSON specification
+│   └── Tokens: 512 in / 234 out
+│
+└── ✅ Final Responder [11ms] ────────────────────────────────────────
+    ├── Input:  Result + Visualization
+    ├── Output: "Here is the sales breakdown by order status..."
+    └── Tokens: 445 in / 112 out
+
+Total: 67ms | Total Tokens: 3,573
+```
+
+#### Key Observability Metrics
+
+| Metric | Description | Typical Value |
+|--------|-------------|---------------|
+| **Trace Duration** | End-to-end latency | 60-90s (local LLM) |
+| **LLM Latency** | Per-inference time | 10-20s per call |
+| **Token Usage** | Input + Output tokens | 2,000-5,000 per query |
+| **MCP Latency** | Database query time | 1-50ms |
+| **Error Rate** | Failed queries | < 5% |
+
+---
+
+### 🔐 Security Architecture
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph BOUNDARIES["Security Boundaries"]
+        direction TB
+        
+        subgraph SQL_GUARD["SQL Injection Prevention"]
+            VALIDATOR["SQL Validator<br/>━━━━━━━━━━<br/>✓ SELECT only<br/>✗ INSERT/UPDATE/DELETE<br/>✗ DROP/ALTER/TRUNCATE<br/>✗ Multiple statements"]
+        end
+        
+        subgraph FS_SANDBOX["Filesystem Sandbox"]
+            SANDBOX["Path Validator<br/>━━━━━━━━━━<br/>✓ Within root_dir<br/>✗ Path traversal (../)<br/>✗ Absolute paths<br/>✗ Symlink escape"]
+        end
+        
+        subgraph DATA_PRIVACY["Data Privacy"]
+            LOCAL["Local Processing<br/>━━━━━━━━━━<br/>✓ 100% on-premise<br/>✓ No external API calls<br/>✓ Your data, your control"]
+        end
+    end
     
-    rect rgb(99, 102, 241, 0.1)
-        Note over WS,R: Intent Classification
-        WS->>R: Route request
-        R->>LLM: Classify intent
-        LLM-->>R: DATA_QUERY (0.95)
-        R-)P: Log trace
-    end
+    INPUT["User Input"] --> VALIDATOR
+    VALIDATOR -->|"Valid"| EXEC["Execute"]
+    VALIDATOR -->|"Invalid"| REJECT["Reject"]
+    
+    FILE_REQ["File Request"] --> SANDBOX
+    SANDBOX -->|"Safe Path"| READ["Read File"]
+    SANDBOX -->|"Unsafe"| DENY["Deny Access"]
+    
+    LLM_REQ["LLM Request"] --> LOCAL
+    LOCAL --> OLLAMA["Ollama (localhost)"]
 
-    rect rgb(16, 185, 129, 0.1)
-        Note over R,C: Query Generation
-        R->>A: Schema analysis
-        A->>LLM: Identify tables
-        LLM-->>A: [orders]
-        A->>C: Generate SQL
-        C->>LLM: Create query
-        LLM-->>C: SELECT status, COUNT(*)...
-    end
-
-    rect rgb(239, 68, 68, 0.1)
-        Note over C,DB: Query Execution
-        C->>MCP: Execute query
-        MCP->>DB: Run SQL
-        DB-->>MCP: Results
-        MCP-->>C: Formatted data
-    end
-
-    rect rgb(139, 92, 246, 0.1)
-        Note over C,F: Response Generation
-        C->>LLM: Generate chart + response
-        LLM-->>C: Plotly spec + text
-        C->>WS: Final response
-        WS->>F: Display result
-        F->>U: Show chart + answer
-    end
+    style VALIDATOR fill:#22c55e,stroke:#16a34a,color:#fff
+    style SANDBOX fill:#3b82f6,stroke:#2563eb,color:#fff
+    style LOCAL fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style REJECT fill:#ef4444,stroke:#dc2626,color:#fff
+    style DENY fill:#ef4444,stroke:#dc2626,color:#fff
 ```
 
-### Security Model
+---
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      SECURITY BOUNDARIES                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                   READ-ONLY ENFORCEMENT                   │   │
-│  │                                                           │   │
-│  │   ✓ SELECT queries only                                  │   │
-│  │   ✗ INSERT, UPDATE, DELETE blocked                       │   │
-│  │   ✗ DROP, ALTER, TRUNCATE blocked                        │   │
-│  │   ✗ Multiple statements blocked                          │   │
-│  │                                                           │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                   FILESYSTEM SANDBOXING                   │   │
-│  │                                                           │   │
-│  │   ✓ Access limited to specified root directory           │   │
-│  │   ✗ Path traversal (../) blocked                         │   │
-│  │   ✗ Absolute paths outside sandbox blocked               │   │
-│  │                                                           │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                   LOCAL PROCESSING                        │   │
-│  │                                                           │   │
-│  │   ✓ All LLM inference runs locally (Ollama)              │   │
-│  │   ✓ No data sent to external APIs                        │   │
-│  │   ✓ Full control over data residency                     │   │
-│  │                                                           │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 📊 Performance Characteristics
+
+| Component | Latency | Throughput | Notes |
+|-----------|---------|------------|-------|
+| **WebSocket RTT** | < 5ms | 1000 msg/s | Real-time bidirectional |
+| **Router Classification** | 10-15s | — | Local LLM inference |
+| **SQL Generation** | 15-20s | — | Complex reasoning |
+| **Query Execution** | 1-50ms | — | Depends on query complexity |
+| **Visualization** | 10-15s | — | Plotly spec generation |
+| **Schema Cache** | < 1ms | — | In-memory, 60s TTL |
+
+> **Note:** Latencies shown are for local LLM (qwen2.5:7b). Cloud LLMs (GPT-4, Claude) reduce inference time to 1-3s per call.
 
 ---
 
