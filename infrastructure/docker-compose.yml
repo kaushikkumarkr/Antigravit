@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  database:
+    container_name: antigravirt_db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      POSTGRES_DB: ${DB_NAME:-analytics_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+        reservations:
+          memory: 256M
+
+volumes:
+  postgres_data:

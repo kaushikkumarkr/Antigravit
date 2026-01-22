@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  database:
+    container_name: antigravirt_db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      POSTGRES_DB: ${DB_NAME:-analytics_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: antigravirt_backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-analytics_db}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres_password}
+      - LLM_PROVIDER=${LLM_PROVIDER:-lmstudio}
+      - LLM_BASE_URL=http://host.docker.internal:1234/v1
+      - LLM_MODEL_NAME=${LLM_MODEL_NAME:-local-model}
+    depends_on:
+      database:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
+
+  frontend:
+    container_name: antigravirt_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000
+        - VITE_WS_URL=ws://localhost:8000
+    ports:
+      - "5173:3000"
+    environment:
+      # These are build-time vars for Vite usually, but we are serving static files.
+      # Since we build in the Dockerfile, we need to ensure VITE_ env vars are available AT BUILD TIME
+      # OR injected into the window object at runtime (more complex).
+      # For now, let's pass them as ARGs if needed or rely on the .env file copied in.
+      # But wait, .env file is copied! So if we update .env locally, it might be picked up.
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
