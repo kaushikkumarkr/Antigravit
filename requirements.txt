@@ -12,11 +12,15 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 python-dotenv>=1.0.0
 mcp>=1.0.0
+# Database Drivers for MCP
+asyncpg>=0.29.0
+aiosqlite>=0.19.0
 # Observability - Arize Phoenix
 arize-phoenix>=5.0.0
 openinference-instrumentation-langchain>=0.1.0
 opentelemetry-sdk>=1.20.0
 opentelemetry-exporter-otlp>=1.20.0
+pytz>=2024.1
 # Dev dependencies
 pytest>=8.0.0
 black>=24.0.0
