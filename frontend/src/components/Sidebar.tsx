@@ -5,9 +5,11 @@ import { Table, Layers, Activity } from 'lucide-react';
 
 interface SidebarProps {
     isConnected: boolean;
+    currentView: 'chat' | 'sources';
+    onNavigate: (view: 'chat' | 'sources') => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isConnected }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isConnected, currentView, onNavigate }) => {
     const [tables, setTables] = useState<string[]>([]);
 
     useEffect(() => {
@@ -31,6 +33,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isConnected }) => {
             <div className="p-4 border-b border-slate-800 flex items-center gap-2">
                 <Layers className="text-indigo-500" />
                 <h1 className="font-bold text-lg text-slate-100">Antigravirt</h1>
+            </div>
+
+            {/* Navigation */}
+            <div className="p-2 space-y-1 border-b border-slate-800">
+                <button
+                    onClick={() => onNavigate('chat')}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${currentView === 'chat'
+                            ? 'bg-indigo-600 text-white'
+                            : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200'
+                        }`}
+                >
+                    <Layers size={16} />
+                    <span>Chat</span>
+                </button>
+                <button
+                    onClick={() => onNavigate('sources')}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${currentView === 'sources'
+                            ? 'bg-indigo-600 text-white'
+                            : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200'
+                        }`}
+                >
+                    <Table size={16} />
+                    <span>Data Sources</span>
+                </button>
             </div>
 
             {/* Status */}
