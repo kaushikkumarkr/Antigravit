@@ -30,6 +30,7 @@ antigravirt/
 │   │   └── llm.py      # LLM configuration
 │   ├── api/            # FastAPI routes and WebSocket
 │   ├── mcp/            # Model Context Protocol server
+│   ├── observability/  # Arize Phoenix instrumentation
 │   └── utils/          # Database and helper utilities
 ├── frontend/           # React Application
 │   └── src/
@@ -38,6 +39,7 @@ antigravirt/
 ├── infrastructure/     # Docker & Database Setup
 │   ├── init.sql        # Database schema
 │   └── seed_data.py    # Sample data generator
+├── Dockerfile.phoenix  # Custom Phoenix image
 └── tests/              # Test Suite
 ```
 
@@ -72,7 +74,11 @@ graph TB
     
     subgraph "Data Layer"
         DB[(PostgreSQL)]
-        LLM[Local LLM\nLM Studio]
+        LLM[Local LLM\nLM Studio/Ollama]
+    end
+
+    subgraph "Observability"
+        Phoenix[Arize Phoenix]
     end
     
     UI --> WS
@@ -96,6 +102,13 @@ graph TB
     Architect --> LLM
     Coder --> LLM
     ChatResp --> LLM
+
+    %% Tracing
+    WSS -.->|Async Traces| Phoenix
+    Router -.-> Phoenix
+    Architect -.-> Phoenix
+    Coder -.-> Phoenix
+    Executor -.-> Phoenix
 ```
 
 ### Agent Pipeline Flow
@@ -124,6 +137,7 @@ sequenceDiagram
     participant A as Agents
     participant DB as PostgreSQL
     participant LLM as Local LLM
+    participant P as Phoenix (Observability)
     
     U->>F: "How many customers?"
     F->>WS: Send message
@@ -137,6 +151,7 @@ sequenceDiagram
     DB-->>A: 500
     A->>LLM: Format response
     LLM-->>A: "There are 500 customers"
+    A-)P: Async Trace (Input/Output/Tokens)
     A-->>WS: Final response
     WS-->>F: Display answer
     F-->>U: "There are 500 customers"
