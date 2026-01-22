@@ -24,16 +24,30 @@ async def coder_node(state: AgentState):
             "schema": schema,
             "question": question
         })
-        sql_query = response.content.strip()
+        raw_content = response.content.strip()
         
-        # Clean markdown
-        if sql_query.startswith("```sql"):
-            sql_query = sql_query[6:]
-        if sql_query.startswith("```"):
-            sql_query = sql_query[3:]
-        if sql_query.endswith("```"):
-            sql_query = sql_query[:-3]
-            
+        # Extract SQL from markdown code blocks if present
+        import re
+        sql_match = re.search(r'```sql\s*(.*?)```', raw_content, re.DOTALL | re.IGNORECASE)
+        if sql_match:
+            sql_query = sql_match.group(1).strip()
+        else:
+            # Try generic code block
+            code_match = re.search(r'```\s*(.*?)```', raw_content, re.DOTALL)
+            if code_match:
+                sql_query = code_match.group(1).strip()
+                # Remove language hint if present (like "sql\n")
+                if sql_query.lower().startswith("sql"):
+                    sql_query = sql_query[3:].strip()
+            else:
+                # No code blocks, use raw content but check for common patterns
+                # Sometimes LLM adds "SELECT" after explanation text
+                select_match = re.search(r'(SELECT\s+.*)', raw_content, re.DOTALL | re.IGNORECASE)
+                if select_match:
+                    sql_query = select_match.group(1).strip()
+                else:
+                    sql_query = raw_content
+        
         sql_query = sql_query.strip()
         
         # Validate (Agent level validation)

@@ -15,6 +15,7 @@ async def final_responder_node(state: AgentState):
     user_question = state.get("user_question")
     sql_query = state.get("sql_query")
     query_result = state.get("query_result", [])
+    visualization_code = state.get("visualization_code")  # Pass through from visualizer
     
     # If result is too large, truncate it for the prompt
     result_str = str(query_result)
@@ -32,10 +33,12 @@ async def final_responder_node(state: AgentState):
         })
         
         return {
-            "final_response": response.content
+            "final_response": response.content,
+            "visualization_code": visualization_code  # Pass through to WebSocket handler
         }
     except Exception as e:
         logger.error(f"Final responder failed: {e}")
         return {
-            "final_response": f"I found the data (Row count: {len(query_result)}), but couldn't generate a summary. Please check the visualization."
+            "final_response": f"I found the data (Row count: {len(query_result)}), but couldn't generate a summary. Please check the visualization.",
+            "visualization_code": visualization_code
         }

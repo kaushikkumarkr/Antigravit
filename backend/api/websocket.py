@@ -54,29 +54,32 @@ async def websocket_endpoint(websocket: WebSocket):
                      })
                      
                      # Perform final response check if output is from terminal nodes
-                     if key in ["visualizer", "error_handler", "schema_responder", "chat_responder", "clarifier", "final_responder"]:
+                     # IMPORTANT: Only send final_response from actual terminal nodes, not intermediary ones
+                     # visualizer -> final_responder flow means we should only respond at final_responder
+                     terminal_nodes = ["error_handler", "schema_responder", "chat_responder", "clarifier", "final_responder"]
+                     
+                     if key in terminal_nodes:
                          logger.info(f"Processing final response for node: {key}")
-                         # But wait! 'visualizer' sets visualization_code. We also need to get the final text response.
-                         # Since we don't have a dedicated final responder node yet (refactor idea from plan deferred),
-                         # we need to construct the final response here or rely on the state having 'final_response'.
                          
                          final_response_text = value.get("final_response")
                          visualization = None
                          
+                         # Check for visualization_code in this node's output
                          if value.get("visualization_code"):
                              try:
                                  visualization = json.loads(value.get("visualization_code"))
                              except:
                                  pass
-                                 
-                         # If we just finished visualizer, we might not have 'final_response' text yet if visualizer didn't set it.
-                         # Let's check the state more deeply or just send what we have.
                          
-                         # Hack for Sprint 6: If key is visualizer, send the viz.
-                         # If key is others, send the text.
-                         
+                         # For final_responder, also check if it passed through visualization
+                         # The visualizer sets visualization_code in state, final_responder should have it
+                         if key == "final_responder" and not visualization:
+                             # Try to get from the value if visualizer set it earlier
+                             if value.get("visualization"):
+                                 visualization = value.get("visualization")
+                                  
                          response_payload = {
-                             "answer": final_response_text or "Here is the visualization.",
+                             "answer": final_response_text or "Here is the response.",
                              "visualization": visualization
                          }
                          

@@ -55,7 +55,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage, i
                         </div>
 
                         <div className={clsx(
-                            "p-4 rounded-lg text-sm leading-relaxed max-w-[80%]",
+                            "p-4 rounded-lg text-sm leading-relaxed",
+                            msg.visualization ? "max-w-[90%] min-w-[550px]" : "max-w-[80%]",
                             msg.role === 'user'
                                 ? "bg-indigo-600/10 border border-indigo-500/20 text-indigo-100"
                                 : "bg-slate-800 border border-slate-700 text-slate-200"
@@ -72,7 +73,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage, i
 
                             {/* Inline Visualization */}
                             {msg.visualization && (
-                                <div className="mt-4 p-3 bg-slate-950 rounded-lg border border-slate-700">
+                                <div className="mt-4 p-4 bg-slate-950 rounded-lg border border-slate-700 min-w-[500px] max-w-[800px]">
                                     <Plot
                                         data={msg.visualization.data}
                                         layout={{
@@ -80,16 +81,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ messages, onSendMessage, i
                                             plot_bgcolor: '#0f172a',
                                             font: {
                                                 color: '#e2e8f0',
-                                                family: 'Inter, sans-serif'
+                                                family: 'Inter, sans-serif',
+                                                size: 12
                                             },
                                             ...msg.visualization.layout,
                                             autosize: true,
-                                            margin: { t: 40, r: 20, b: 50, l: 60 },
-                                            height: 300
+                                            margin: { t: 50, r: 40, b: 80, l: 80 },
+                                            height: 400
                                         }}
                                         useResizeHandler={true}
-                                        style={{ width: '100%', height: '300px' }}
-                                        config={{ responsive: true, displayModeBar: false }}
+                                        style={{ width: '100%', minWidth: '450px', height: '400px' }}
+                                        config={{
+                                            responsive: true,
+                                            displayModeBar: true,
+                                            displaylogo: false,
+                                            modeBarButtonsToRemove: ['lasso2d', 'select2d']
+                                        }}
                                     />
                                 </div>
                             )}

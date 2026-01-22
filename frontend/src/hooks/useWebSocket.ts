@@ -41,7 +41,10 @@ export const useWebSocket = (url: string, onMessage?: (msg: WebSocketMessage) =>
             ws.onclose = (event) => {
                 console.log('WS Disconnected', event.code, event.reason);
                 setIsConnected(false);
-                wsRef.current = null;
+                // Only nullify ref if this is still the current websocket
+                if (wsRef.current === ws) {
+                    wsRef.current = null;
+                }
                 // Reconnect after 3 seconds
                 reconnectTimeoutRef.current = setTimeout(connect, 3000);
             };
