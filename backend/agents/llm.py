@@ -21,7 +21,7 @@ def get_llm(temperature: float = 0):
                 logger.warning("GOOGLE_API_KEY not set, falling back to local LLM")
             else:
                 return ChatGoogleGenerativeAI(
-                    model="gemini-1.5-pro", # Or make this configurable
+                    model=settings.LLM_MODEL_NAME,
                     google_api_key=settings.GOOGLE_API_KEY,
                     temperature=temperature,
                     convert_system_message_to_human=True

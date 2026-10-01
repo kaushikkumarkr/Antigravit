@@ -31,7 +31,11 @@ def init_phoenix():
         return
     
     try:
-        from phoenix.otel import register
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from openinference.instrumentation.langchain import LangChainInstrumentor
         
         # Get Phoenix endpoint from environment
@@ -39,11 +43,16 @@ def init_phoenix():
         
         logger.info(f"Initializing Phoenix observability - Endpoint: {phoenix_endpoint}")
         
-        # Register Phoenix as the tracer provider
-        tracer_provider = register(
-            project_name="antigravirt",
-            endpoint=f"{phoenix_endpoint}/v1/traces"
+        # Send OpenTelemetry spans to Phoenix's OTLP HTTP collector.
+        tracer_provider = TracerProvider(
+            resource=Resource.create({"openinference.project.name": "antigravirt"})
         )
+        tracer_provider.add_span_processor(
+            BatchSpanProcessor(
+                OTLPSpanExporter(endpoint=f"{phoenix_endpoint}/v1/traces")
+            )
+        )
+        trace.set_tracer_provider(tracer_provider)
         
         # Instrument LangChain to capture all traces
         LangChainInstrumentor().instrument(tracer_provider=tracer_provider)

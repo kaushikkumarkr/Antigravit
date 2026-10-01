@@ -529,7 +529,7 @@ antigravirt/
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11 or 3.12
 - Node.js 18+
 - Docker & Docker Compose
 - Ollama (recommended) or LM Studio
@@ -548,7 +548,7 @@ pip install -r requirements.txt
 
 # 3. Environment configuration
 cp .env.example .env
-# Edit .env with your LLM and database settings
+# Add your Google AI Studio API key to GOOGLE_API_KEY in .env
 
 # 4. Start database (PostgreSQL)
 docker-compose -f infrastructure/docker-compose.yml up -d
@@ -556,14 +556,10 @@ docker-compose -f infrastructure/docker-compose.yml up -d
 # 5. Seed sample data
 python infrastructure/seed_data.py
 
-# 6. Start Ollama with a model
-ollama pull qwen2.5:7b
-ollama serve
-
-# 7. Start backend
+# 6. Start backend
 uvicorn backend.main:app --reload --port 8000
 
-# 8. Start frontend (new terminal)
+# 7. Start frontend (new terminal)
 cd frontend
 npm install
 npm run dev

@@ -11,7 +11,14 @@ Common errors:
 - Syntax errors (missing commas, quotes)
 - Type mismatches
 
-ORIGINAL QUESTION:
+INSTRUCTIONS:
+1. Provide a brief verification of why it failed (reasoning).
+2. Generate the CORRECTED SQL query. Only output the raw SQL, no markdown.
+"""
+
+critic_prompt = ChatPromptTemplate.from_messages([
+    ("system", CRITIC_SYSTEM_PROMPT),
+    ("user", """ORIGINAL QUESTION:
 {question}
 
 FAILED SQL:
@@ -21,13 +28,5 @@ ERROR MESSAGE:
 {error}
 
 SCHEMA CONTEXT:
-{schema}
-
-INSTRUCTIONS:
-1. Provide a brief verification of why it failed (reasoning).
-2. Generate the CORRECTED SQL query. Only output the raw SQL, no markdown.
-"""
-
-critic_prompt = ChatPromptTemplate.from_messages([
-    ("system", CRITIC_SYSTEM_PROMPT)
+{schema}""")
 ])

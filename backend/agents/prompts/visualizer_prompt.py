@@ -4,12 +4,6 @@ from langchain_core.prompts import ChatPromptTemplate
 VISUALIZER_SYSTEM_PROMPT = """You are a Data Visualization Expert using Plotly.
 Your goal is to generate a Plotly JSON configuration (data and layout) to visualize the provided data.
 
-INPUT DATA:
-{data_context}
-
-USER QUESTION:
-{question}
-
 INSTRUCTIONS:
 1. Parse the input data (which might be in Markdown table format).
 2. Select the most appropriate chart type (Bar, Line, Pie, Scatter) for the data and question.
@@ -34,5 +28,6 @@ Example:
 """
 
 visualizer_prompt = ChatPromptTemplate.from_messages([
-    ("system", VISUALIZER_SYSTEM_PROMPT)
+    ("system", VISUALIZER_SYSTEM_PROMPT),
+    ("user", "INPUT DATA:\n{data_context}\n\nUSER QUESTION:\n{question}")
 ])

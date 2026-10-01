@@ -7,6 +7,7 @@ import logging
 import time
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -112,12 +113,12 @@ class MCPConnectionManager:
         
         if conn_type == "postgres":
             script = os.path.join(base_dir, "servers", "postgres.py")
-            # If params provided, override env
-            if params.get("host"): env["DB_HOST"] = params["host"]
-            if params.get("port"): env["DB_PORT"] = str(params["port"])
-            if params.get("user"): env["DB_USER"] = params["user"]
-            if params.get("password"): env["DB_PASSWORD"] = params["password"]
-            if params.get("dbname"): env["DB_NAME"] = params["dbname"]
+            # Use configured defaults from .env, then apply connection overrides.
+            env["DB_HOST"] = params.get("host", settings.DB_HOST)
+            env["DB_PORT"] = str(params.get("port", settings.DB_PORT))
+            env["DB_USER"] = params.get("user", settings.DB_USER)
+            env["DB_PASSWORD"] = params.get("password", settings.DB_PASSWORD)
+            env["DB_NAME"] = params.get("dbname", settings.DB_NAME)
             
         elif conn_type == "sqlite":
             script = os.path.join(base_dir, "servers", "sqlite.py")
